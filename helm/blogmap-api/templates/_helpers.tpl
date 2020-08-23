@@ -49,6 +49,8 @@ Selector labels
 {{- define "blogmap-api.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "blogmap-api.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+app: {{ include "blogmap-api.name" . }}
+version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 
 {{/*
