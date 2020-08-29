@@ -1,0 +1,12 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: blogmap-api
+spec:
+  hosts:
+  - blogmap-api.riju.io
+  http:
+  - route:
+    - destination:
+        host: blogmap-api
+

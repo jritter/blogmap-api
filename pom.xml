@@ -7,6 +7,7 @@
   <version>1.0.2-SNAPSHOT</version>
   <properties>
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
+    <jkube.version>1.0.0-rc-1</jkube.version>
     <maven.compiler.parameters>true</maven.compiler.parameters>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
@@ -89,6 +90,18 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-opentracing</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-agroal</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-jdbc-h2</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>io.opentracing.contrib</groupId>
+        <artifactId>opentracing-jdbc</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -115,6 +128,60 @@
           <systemProperties>
             <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
           </systemProperties>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.jkube</groupId>
+        <artifactId>kubernetes-maven-plugin</artifactId>
+        <version>1.0.0-rc-1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>resource</goal>
+              <goal>helm</goal>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <images>
+            <image>
+              <name>quay.io/jritter/${project.artifactId}</name>
+              <build>
+                <from>registry.access.redhat.com/ubi8/ubi-minimal:8.2</from>
+                <tags>
+                  <tag>${project.version}</tag>
+                </tags>
+                <env>
+                  <JAVA_APP_JAR>${project.artifactId}-${project.version}-runner.jar</JAVA_APP_JAR>
+                  <JAVA_OPTIONS>-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager</JAVA_OPTIONS>
+                </env>
+                <assembly>
+                  <mode>dir</mode>
+                  <targetDir>/deployments</targetDir>
+                  <inline>
+                    <id>customized-quarkus</id>
+                    <files>
+                      <file>
+                        <source>target/${project.artifactId}-${project.version}-runner.jar</source>
+                        <outputDirectory>.</outputDirectory>
+                      </file>
+                    </files>
+                  </inline>
+                </assembly>
+                <ports>8080</ports>
+                <user>1001</user>
+              </build>
+            </image>
+            <image>
+              <name>elasticsearch:7.9.0</name>
+              <alias>elasticsearch</alias>
+            </image>
+          </images>
+          <helm>
+            <outputDir>${basedir}/target/helm</outputDir>
+          </helm>
         </configuration>
       </plugin>
     </plugins>
